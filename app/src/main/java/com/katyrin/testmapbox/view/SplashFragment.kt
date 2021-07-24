@@ -1,28 +1,20 @@
 package com.katyrin.testmapbox.view
 
-import android.Manifest
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.katyrin.testmapbox.R
 import com.katyrin.testmapbox.databinding.FragmentSplashBinding
-import com.katyrin.testmapbox.utils.setRotateImage
-import com.katyrin.testmapbox.viewmodel.SplashViewModel
+import com.katyrin.testmapbox.utils.*
 
 class SplashFragment : Fragment() {
 
-    private lateinit var viewModel: SplashViewModel
     private var binding: FragmentSplashBinding? = null
-    private var handler = Handler(Looper.getMainLooper())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,77 +26,66 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ViewModelProvider(this).get(SplashViewModel::class.java)
         startAnimation()
     }
 
     private fun startAnimation() {
-        binding?.imageView?.setRotateImage()
-        handler.postDelayed({ checkPermission() }, SPLASH_ACTIVITY_ANIMATION_TIME)
-    }
-
-    private fun requestPermissions() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            REQUEST_CODE_LOCATION
-        )
+        binding?.imageView?.setRotateImage { replaceMapFragment() }
+        checkPermission()
     }
 
     private fun checkPermission() {
-        when (PackageManager.PERMISSION_GRANTED) {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) -> replaceMapFragment()
-            else -> requestPermissions()
+        val permission = ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION)
+        when {
+            permission == PackageManager.PERMISSION_GRANTED -> getLocation()
+            shouldShowRequestPermissionRationale(ACCESS_FINE_LOCATION) ->
+                requireActivity().showRationaleDialog()
+            else -> requireActivity().requestLocationPermission()
         }
     }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<out String>,
+        permissions: Array<String>,
         grantResults: IntArray
     ) {
-        when (requestCode) {
-            REQUEST_CODE_LOCATION -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED))
-                    replaceMapFragment()
-                else showRequestDialog()
-                return
-            }
+        if (requestCode == REQUEST_CODE_LOCATION) {
+            checkPermissionsResult(grantResults)
+            return
         }
     }
 
-    private fun showRequestDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.access_to_location))
-            .setMessage(getString(R.string.explanation_get_location))
-            .setPositiveButton(getString(R.string.grant_access)) { _, _ ->
-                requestPermissions()
-                replaceMapFragment()
-            }
-            .setNegativeButton(getString(R.string.do_not)) { dialog, _ ->
-                dialog.dismiss()
-                replaceMapFragment()
-            }
-            .create()
-            .show()
+    private fun checkPermissionsResult(grants: IntArray) {
+        if (grants.isNotEmpty() && grants.size == countPermissions(grants)) getLocation()
+        else requireContext().showNoGpsDialog()
+    }
+
+    private fun countPermissions(grantResults: IntArray): Int {
+        var grantedPermissions = 0
+        for (result in grantResults) {
+            if (result == PackageManager.PERMISSION_GRANTED) grantedPermissions++
+        }
+        return grantedPermissions
+    }
+
+    private fun getLocation() {
+        val permission = ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION)
+        if (permission == PackageManager.PERMISSION_GRANTED) replaceMapFragment()
+        else requireActivity().showRationaleDialog()
     }
 
     private fun replaceMapFragment() {
-
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.container, MapFragment.newInstance())
+            .commitNow()
     }
 
     override fun onDetach() {
         binding = null
-        handler.removeCallbacksAndMessages(null)
         super.onDetach()
     }
 
     companion object {
-        private const val SPLASH_ACTIVITY_ANIMATION_TIME = 1000L
-        private const val REQUEST_CODE_LOCATION = 54
         fun newInstance() = SplashFragment()
     }
 }

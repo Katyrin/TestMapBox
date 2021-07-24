@@ -5,4 +5,7 @@
     <string name="explanation_get_location">Access is required otherwise you will not be able to use the application</string>
     <string name="grant_access">Grant access</string>
     <string name="do_not">Do not</string>
+    <string name="dialog_title_no_gps">Access to geolocation is closed</string>
+    <string name="dialog_message_no_gps">Allow access to geolocation if you want to fully use the application</string>
+    <string name="close">Close</string>
 </resources>
