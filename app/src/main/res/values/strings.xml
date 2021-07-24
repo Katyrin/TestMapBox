@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Test MapBox</string>
+
+    <string name="access_to_location">Access to get location</string>
+    <string name="explanation_get_location">Access is required otherwise you will not be able to use the application</string>
+    <string name="grant_access">Grant access</string>
+    <string name="do_not">Do not</string>
 </resources>
