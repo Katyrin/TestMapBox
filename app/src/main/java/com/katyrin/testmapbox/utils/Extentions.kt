@@ -8,7 +8,9 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
 import com.katyrin.testmapbox.R
+import com.mapbox.android.core.permissions.PermissionsManager
 
 private const val ROTATION_ANIMATED_AMOUNT = 1000f
 private const val ROTATION_DURATION = 3000L
@@ -22,7 +24,9 @@ fun View.setRotateImage(onAnimationEnd: () -> Unit) {
             override fun onAnimationStart(animation: Animator?) {}
             override fun onAnimationCancel(animation: Animator?) {}
             override fun onAnimationRepeat(animation: Animator?) {}
-            override fun onAnimationEnd(animation: Animator?) { onAnimationEnd() }
+            override fun onAnimationEnd(animation: Animator?) {
+                onAnimationEnd()
+            }
         })
         .duration = ROTATION_DURATION
 }
@@ -52,4 +56,13 @@ fun Activity.showRationaleDialog() {
         .setNegativeButton(getString(R.string.do_not)) { dialog, _ -> dialog.dismiss() }
         .create()
         .show()
+}
+
+fun Fragment.checkLocationPermission(onPermissionGranted: () -> Unit) {
+    when {
+        PermissionsManager.areLocationPermissionsGranted(requireContext()) -> onPermissionGranted()
+        shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ->
+            requireActivity().showRationaleDialog()
+        else -> requireActivity().requestLocationPermission()
+    }
 }

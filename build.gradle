@@ -19,6 +19,17 @@ allprojects {
         google()
         mavenCentral()
         jcenter() // Warning: this repository is going to shut down soon
+        maven {
+            url 'https://api.mapbox.com/downloads/v2/releases/maven'
+            authentication {
+                basic(BasicAuthentication)
+            }
+            credentials {
+                username = 'mapbox'
+                password = 'sk.eyJ1Ijoia2F0eXJpbiIsImEiOiJja3JodHdxNTkwMGM0Mm9wNjlteHVtcno1In0.BMY9DSah4Xj4RBX9_19otw'
+                //project.properties['MAPBOX_DOWNLOADS_TOKEN'] ?: ""
+            }
+        }
     }
 }
 
