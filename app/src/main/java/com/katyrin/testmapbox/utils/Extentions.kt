@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Context
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -65,4 +66,8 @@ fun Fragment.checkLocationPermission(onPermissionGranted: () -> Unit) {
             requireActivity().showRationaleDialog()
         else -> requireActivity().requestLocationPermission()
     }
+}
+
+fun Context.toast(message: String) {
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }

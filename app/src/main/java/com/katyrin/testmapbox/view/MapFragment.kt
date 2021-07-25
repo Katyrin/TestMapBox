@@ -9,18 +9,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.katyrin.testmapbox.R
 import com.katyrin.testmapbox.databinding.FragmentMapBinding
+import com.katyrin.testmapbox.model.data.GeoPositionDTO
 import com.katyrin.testmapbox.utils.*
+import com.katyrin.testmapbox.viewmodel.AppState
 import com.katyrin.testmapbox.viewmodel.MapViewModel
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
@@ -52,8 +54,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
         binding?.mapView?.onCreate(savedInstanceState)
         binding?.mapView?.getMapAsync(this)
         viewModel = ViewModelProvider(this).get(MapViewModel::class.java)
+        viewModel.liveData.observe(viewLifecycleOwner) { renderData(it) }
 
-        checkLocationPermission { updateLocation() }
+        checkLocationPermission(::updateLocation)
     }
 
     @SuppressLint("MissingPermission")
@@ -68,7 +71,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
                         MINIMAL_DISTANCE
                     ) { location ->
                         viewModel.updateMarkers(location.latitude, location.longitude)
-                        Toast.makeText(ctx, "updateMarkers", Toast.LENGTH_LONG).show()
+                        requireContext().toast("updateMarkers")
                     }
                 }
             }
@@ -167,25 +170,42 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
     }
 
     private fun getLocation() {
-        val permission = ContextCompat.checkSelfPermission(requireContext(),
+        val permission = ContextCompat.checkSelfPermission(
+            requireContext(),
             Manifest.permission.ACCESS_FINE_LOCATION
         )
         if (permission != PackageManager.PERMISSION_GRANTED) requireActivity().showRationaleDialog()
     }
 
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
-        Toast.makeText(requireContext(), R.string.explanation_get_location, Toast.LENGTH_LONG)
-            .show()
+        requireContext().toast(getString(R.string.explanation_get_location))
     }
 
     override fun onPermissionResult(granted: Boolean) {
         if (granted)
             mapboxMap?.getStyle { style -> checkLocationPermission { enableLocationComponent(style) } }
         else
-            Toast.makeText(requireContext(), R.string.not_granted_message, Toast.LENGTH_LONG).show()
+            requireContext().toast(getString(R.string.not_granted_message))
     }
 
-    private fun updateMarkers(listFeature: List<Feature>) {
+    private fun renderData(appState: AppState<List<GeoPositionDTO>>) {
+        when (appState) {
+            is AppState.Success -> showMarkers(appState.value)
+            is AppState.ServerError -> requireContext().toast(getString(R.string.server_error))
+            is AppState.ClientError ->
+                requireContext().toast("${getString(R.string.server_error)} ${appState.code}")
+            is AppState.Loading -> requireContext().toast(getString(R.string.loading))
+        }
+    }
+
+    private fun showMarkers(geoPoints: List<GeoPositionDTO>) {
+        val listFeature: MutableList<Feature> = mutableListOf()
+        for (geoPoint in geoPoints) {
+            val lng: Double = geoPoint.longitude ?: break
+            val lat: Double = geoPoint.latitude ?: break
+            listFeature.add(Feature.fromGeometry(Point.fromLngLat(lng, lat)))
+        }
+
         Style.Builder()
             .withSource(GeoJsonSource("SOURCE_ID", FeatureCollection.fromFeatures(listFeature)))
     }
