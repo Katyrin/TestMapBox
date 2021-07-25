@@ -11,10 +11,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import com.katyrin.testmapbox.R
 import com.katyrin.testmapbox.databinding.FragmentMapBinding
-import com.katyrin.testmapbox.model.data.GeoPositionDTO
 import com.katyrin.testmapbox.utils.*
 import com.katyrin.testmapbox.viewmodel.AppState
 import com.katyrin.testmapbox.viewmodel.MapViewModel
@@ -22,7 +22,6 @@ import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
-import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
@@ -33,13 +32,30 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.Style.MAPBOX_STREETS
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import dagger.android.AndroidInjector
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasAndroidInjector
+import dagger.android.support.AndroidSupportInjection
+import javax.inject.Inject
 
 
-class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
+class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndroidInjector {
 
-    private lateinit var viewModel: MapViewModel
+    @Inject
+    lateinit var androidInjector: DispatchingAndroidInjector<Any>
+
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
+    private val viewModel: MapViewModel by viewModels(factoryProducer = { factory })
     private var binding: FragmentMapBinding? = null
     private var mapboxMap: MapboxMap? = null
+
+    override fun onAttach(context: Context) {
+        AndroidSupportInjection.inject(this)
+        super.onAttach(context)
+    }
+
+    override fun androidInjector(): AndroidInjector<Any> = androidInjector
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,7 +69,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
         super.onViewCreated(view, savedInstanceState)
         binding?.mapView?.onCreate(savedInstanceState)
         binding?.mapView?.getMapAsync(this)
-        viewModel = ViewModelProvider(this).get(MapViewModel::class.java)
         viewModel.liveData.observe(viewLifecycleOwner) { renderData(it) }
 
         checkLocationPermission(::updateLocation)
@@ -71,7 +86,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
                         MINIMAL_DISTANCE
                     ) { location ->
                         viewModel.updateMarkers(location.latitude, location.longitude)
-                        requireContext().toast("updateMarkers")
+                        ctx.toast("updateMarkers")
                     }
                 }
             }
@@ -188,24 +203,16 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener {
             requireContext().toast(getString(R.string.not_granted_message))
     }
 
-    private fun renderData(appState: AppState<List<GeoPositionDTO>>) {
+    private fun renderData(appState: AppState<List<Feature>>) {
         when (appState) {
             is AppState.Success -> showMarkers(appState.value)
-            is AppState.ServerError -> requireContext().toast(getString(R.string.server_error))
-            is AppState.ClientError ->
-                requireContext().toast("${getString(R.string.server_error)} ${appState.code}")
+            is AppState.Error ->
+                requireContext().toast(getString(R.string.server_error) + " ${appState.message}")
             is AppState.Loading -> requireContext().toast(getString(R.string.loading))
         }
     }
 
-    private fun showMarkers(geoPoints: List<GeoPositionDTO>) {
-        val listFeature: MutableList<Feature> = mutableListOf()
-        for (geoPoint in geoPoints) {
-            val lng: Double = geoPoint.longitude ?: break
-            val lat: Double = geoPoint.latitude ?: break
-            listFeature.add(Feature.fromGeometry(Point.fromLngLat(lng, lat)))
-        }
-
+    private fun showMarkers(listFeature: List<Feature>) {
         Style.Builder()
             .withSource(GeoJsonSource("SOURCE_ID", FeatureCollection.fromFeatures(listFeature)))
     }

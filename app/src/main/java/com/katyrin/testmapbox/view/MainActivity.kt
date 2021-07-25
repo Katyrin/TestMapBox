@@ -4,13 +4,20 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.katyrin.testmapbox.R
 import com.katyrin.testmapbox.databinding.ActivityMainBinding
-import com.mapbox.mapboxsdk.Mapbox
+import dagger.android.AndroidInjection
+import dagger.android.AndroidInjector
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasAndroidInjector
+import javax.inject.Inject
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
+    @Inject
+    lateinit var androidInjector: DispatchingAndroidInjector<Any>
     private var binding: ActivityMainBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
 
@@ -28,4 +35,6 @@ class MainActivity : AppCompatActivity() {
         binding = null
         super.onDestroy()
     }
+
+    override fun androidInjector(): AndroidInjector<Any>  = androidInjector
 }
