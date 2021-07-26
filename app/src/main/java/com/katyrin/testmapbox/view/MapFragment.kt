@@ -1,6 +1,6 @@
 package com.katyrin.testmapbox.view
 
-import android.Manifest
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
@@ -13,15 +13,14 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
+import com.katyrin.testmapbox.BuildConfig
 import com.katyrin.testmapbox.R
 import com.katyrin.testmapbox.databinding.FragmentMapBinding
 import com.katyrin.testmapbox.utils.*
 import com.katyrin.testmapbox.viewmodel.AppState
 import com.katyrin.testmapbox.viewmodel.MapViewModel
 import com.mapbox.android.core.permissions.PermissionsListener
-import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Feature
-import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
@@ -31,7 +30,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.Style.MAPBOX_STREETS
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
@@ -70,7 +68,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
         binding?.mapView?.onCreate(savedInstanceState)
         binding?.mapView?.getMapAsync(this)
         viewModel.liveData.observe(viewLifecycleOwner) { renderData(it) }
-
         checkLocationPermission(::updateLocation)
     }
 
@@ -79,16 +76,11 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
         context?.let { ctx ->
             val locationManager = ctx.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             locationManager.getProvider(LocationManager.GPS_PROVIDER)?.let {
-                if (PermissionsManager.areLocationPermissionsGranted(ctx)) {
-                    locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER,
-                        REFRESH_PERIOD,
-                        MINIMAL_DISTANCE
-                    ) { location ->
-                        viewModel.updateMarkers(location.latitude, location.longitude)
-                        ctx.toast("updateMarkers")
-                    }
-                }
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    REFRESH_PERIOD,
+                    MINIMAL_DISTANCE
+                ) { location -> viewModel.updateMarkers(location.latitude, location.longitude) }
             }
         }
     }
@@ -116,10 +108,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Mapbox.getInstance(
-            requireContext(),
-            "sk.eyJ1Ijoia2F0eXJpbiIsImEiOiJja3JodHdxNTkwMGM0Mm9wNjlteHVtcno1In0.BMY9DSah4Xj4RBX9_19otw"
-        )
+        Mapbox.getInstance(requireContext(), BuildConfig.MAP_ACCESS_TOKEN)
         super.onCreate(savedInstanceState)
     }
 
@@ -185,10 +174,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
     }
 
     private fun getLocation() {
-        val permission = ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+        val permission = ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION)
         if (permission != PackageManager.PERMISSION_GRANTED) requireActivity().showRationaleDialog()
     }
 
@@ -213,8 +199,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
     }
 
     private fun showMarkers(listFeature: List<Feature>) {
-        Style.Builder()
-            .withSource(GeoJsonSource("SOURCE_ID", FeatureCollection.fromFeatures(listFeature)))
+        mapboxMap?.setStyle(
+            MapStyleBuilder(listFeature, resources).getMapStyleBuilder()
+        ) { style -> checkLocationPermission { enableLocationComponent(style) } }
     }
 
     companion object {

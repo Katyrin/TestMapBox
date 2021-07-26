@@ -26,8 +26,7 @@ allprojects {
             }
             credentials {
                 username = 'mapbox'
-                password = 'sk.eyJ1Ijoia2F0eXJpbiIsImEiOiJja3JodHdxNTkwMGM0Mm9wNjlteHVtcno1In0.BMY9DSah4Xj4RBX9_19otw'
-                //project.properties['MAPBOX_DOWNLOADS_TOKEN'] ?: ""
+                password = project.properties['MAP_ACCESS_TOKEN'] ?: ""
             }
         }
     }

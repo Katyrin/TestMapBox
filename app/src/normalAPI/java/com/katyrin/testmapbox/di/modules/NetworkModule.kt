@@ -34,8 +34,4 @@ class NetworkModule {
         OkHttpClient.Builder().apply {
             addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
         }.build()
-
-    private companion object {
-        const val BASE_URL = "http://103.23.208.205:8082/"
-    }
 }
