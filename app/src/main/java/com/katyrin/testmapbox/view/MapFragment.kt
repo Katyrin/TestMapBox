@@ -80,7 +80,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
                     LocationManager.GPS_PROVIDER,
                     REFRESH_PERIOD,
                     MINIMAL_DISTANCE
-                ) { location -> viewModel.updateMarkers(location.latitude, location.longitude) }
+                ) { location ->
+                    viewModel.updateMarkers(location.latitude, location.longitude)
+                }
             }
         }
     }
@@ -88,7 +90,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
     override fun onMapReady(mapboxMap: MapboxMap) {
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(MAPBOX_STREETS) { style ->
-            checkLocationPermission { enableLocationComponent(style) }
+            checkLocationPermission {
+                enableLocationComponent(style)
+                mapboxMap.locationComponent.lastKnownLocation?.let {
+                    viewModel.updateMarkers(it.latitude, it.longitude)
+                }
+            }
         }
     }
 
@@ -149,33 +156,10 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
         binding?.mapView?.onDestroy()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        if (requestCode == REQUEST_CODE_LOCATION) {
-            checkPermissionsResult(grantResults)
-            return
-        }
-    }
-
-    private fun checkPermissionsResult(grants: IntArray) {
-        if (grants.isNotEmpty() && grants.size == countPermissions(grants)) getLocation()
-        else requireContext().showNoGpsDialog()
-    }
-
-    private fun countPermissions(grantResults: IntArray): Int {
-        var grantedPermissions = 0
-        for (result in grantResults) {
-            if (result == PackageManager.PERMISSION_GRANTED) grantedPermissions++
-        }
-        return grantedPermissions
-    }
-
-    private fun getLocation() {
+    fun getLocation() {
         val permission = ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION)
         if (permission != PackageManager.PERMISSION_GRANTED) requireActivity().showRationaleDialog()
+        else mapboxMap?.getStyle { style -> checkLocationPermission { enableLocationComponent(style) } }
     }
 
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {

@@ -40,15 +40,6 @@ fun Activity.requestLocationPermission() {
     )
 }
 
-fun Context.showNoGpsDialog() {
-    AlertDialog.Builder(this)
-        .setTitle(getString(R.string.dialog_title_no_gps))
-        .setMessage(getString(R.string.dialog_message_no_gps))
-        .setNegativeButton(getString(R.string.close)) { dialog, _ -> dialog.dismiss() }
-        .create()
-        .show()
-}
-
 fun Activity.showRationaleDialog() {
     AlertDialog.Builder(this)
         .setTitle(getString(R.string.access_to_location))

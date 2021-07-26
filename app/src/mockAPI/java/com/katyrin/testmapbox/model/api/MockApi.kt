@@ -6,9 +6,8 @@ import retrofit2.mock.BehaviorDelegate
 
 class MockApi(private val behaviorDelegate: BehaviorDelegate<Api>) : Api {
 
-    private val geoPositions: MutableList<GeoPositionDTO> = mutableListOf()
-
     override fun getLocationsByLatLong(lat: Double, lng: Double): Single<List<GeoPositionDTO>> {
+        val geoPositions: MutableList<GeoPositionDTO> = mutableListOf()
         var baseLatitude = lat
         var baseLongitude = lng
         for (i in 1..20) {

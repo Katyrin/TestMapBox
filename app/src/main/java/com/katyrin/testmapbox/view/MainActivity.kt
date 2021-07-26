@@ -1,9 +1,12 @@
 package com.katyrin.testmapbox.view
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.katyrin.testmapbox.R
 import com.katyrin.testmapbox.databinding.ActivityMainBinding
+import com.katyrin.testmapbox.utils.REQUEST_CODE_LOCATION
+import com.katyrin.testmapbox.utils.toast
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -28,7 +31,26 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     private fun replaceSplashFragment() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.container, SplashFragment.newInstance())
-            .commitNow()
+            .commit()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_CODE_LOCATION -> checkPermissionsResult(grantResults)
+            else -> toast(getString(R.string.permission_denied))
+        }
+    }
+
+    private fun checkPermissionsResult(grants: IntArray) {
+        if (grants.isNotEmpty() && grants[0] == PackageManager.PERMISSION_GRANTED) {
+            val fragment = supportFragmentManager.fragments[0]
+            if (fragment is MapFragment) fragment.getLocation()
+        }
     }
 
     override fun onDestroy() {
@@ -36,5 +58,5 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         super.onDestroy()
     }
 
-    override fun androidInjector(): AndroidInjector<Any>  = androidInjector
+    override fun androidInjector(): AndroidInjector<Any> = androidInjector
 }

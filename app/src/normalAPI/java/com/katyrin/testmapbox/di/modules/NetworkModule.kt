@@ -3,6 +3,7 @@ package com.katyrin.testmapbox.di.modules
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.katyrin.testmapbox.model.api.Api
+import com.katyrin.testmapbox.utils.BASE_URL
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
