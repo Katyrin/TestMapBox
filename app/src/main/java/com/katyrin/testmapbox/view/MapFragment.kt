@@ -68,11 +68,11 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
         binding?.mapView?.onCreate(savedInstanceState)
         binding?.mapView?.getMapAsync(this)
         viewModel.liveData.observe(viewLifecycleOwner) { renderData(it) }
-        checkLocationPermission(::updateLocation)
+        checkLocationPermission(::subscribeUpdateLocation)
     }
 
     @SuppressLint("MissingPermission")
-    private fun updateLocation() {
+    private fun subscribeUpdateLocation() {
         context?.let { ctx ->
             val locationManager = ctx.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             locationManager.getProvider(LocationManager.GPS_PROVIDER)?.let {
@@ -92,10 +92,14 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
         mapboxMap.setStyle(MAPBOX_STREETS) { style ->
             checkLocationPermission {
                 enableLocationComponent(style)
-                mapboxMap.locationComponent.lastKnownLocation?.let {
-                    viewModel.updateMarkers(it.latitude, it.longitude)
-                }
+                updateMarkers()
             }
+        }
+    }
+
+    private fun updateMarkers() {
+        mapboxMap?.locationComponent?.lastKnownLocation?.let {
+            viewModel.updateMarkers(it.latitude, it.longitude)
         }
     }
 
@@ -159,7 +163,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, PermissionsListener, HasAndr
     fun getLocation() {
         val permission = ContextCompat.checkSelfPermission(requireContext(), ACCESS_FINE_LOCATION)
         if (permission != PackageManager.PERMISSION_GRANTED) requireActivity().showRationaleDialog()
-        else mapboxMap?.getStyle { style -> checkLocationPermission { enableLocationComponent(style) } }
+        else mapboxMap?.getStyle { style ->
+            checkLocationPermission {
+                enableLocationComponent(style)
+                updateMarkers()
+            }
+        }
     }
 
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
