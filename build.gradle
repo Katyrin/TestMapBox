@@ -25,8 +25,9 @@ allprojects {
                 basic(BasicAuthentication)
             }
             credentials {
-                username = 'mapbox'
-                password = project.properties['MAP_ACCESS_TOKEN'] ?: ""
+                username "mapbox"
+                password = System.getenv("MAP_ACCESS_TOKEN") ?:
+                        project.properties["MAP_ACCESS_TOKEN"] as String
             }
         }
     }
