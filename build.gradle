@@ -4,6 +4,17 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url 'https://api.mapbox.com/downloads/v2/releases/maven'
+            authentication {
+                basic(BasicAuthentication)
+            }
+            credentials {
+                username "mapbox"
+                password = System.getenv("MAP_ACCESS_TOKEN") ?:
+                        project.properties["MAP_ACCESS_TOKEN"] as String
+            }
+        }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.2"
