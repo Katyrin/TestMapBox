@@ -11,8 +11,7 @@ buildscript {
             }
             credentials {
                 username "mapbox"
-                password = System.getenv("MAP_ACCESS_TOKEN") ?:
-                        project.properties["MAP_ACCESS_TOKEN"] as String
+                password = project.properties['MAPBOX_DOWNLOADS_TOKEN'] ?: ""
             }
         }
     }
@@ -37,8 +36,7 @@ allprojects {
             }
             credentials {
                 username "mapbox"
-                password = System.getenv("MAP_ACCESS_TOKEN") ?:
-                        project.properties["MAP_ACCESS_TOKEN"] as String
+                password = project.properties['MAPBOX_DOWNLOADS_TOKEN'] ?: ""
             }
         }
     }

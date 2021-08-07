@@ -7,12 +7,11 @@ import javax.inject.Inject
 
 class MapRepositoryImpl @Inject constructor(
     private val mapDataSource: MapDataSource,
-    private val geoPositionMapper: GeoPositionMapper,
-    private val geoPointsFilter: GeoPointsFilter
+    private val geoPositionMapper: GeoPositionMapper
 ) : MapRepository {
 
     override fun getLocations(lat: Double, lng: Double): Single<List<Feature>> =
-        mapDataSource.getLocations(lat, lng)
-            .map { geoPointsFilter.filter(lat, lng, it) }
+        mapDataSource
+            .getLocations(lat, lng)
             .map { geoPositionMapper.map(it) }
 }

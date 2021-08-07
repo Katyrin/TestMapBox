@@ -12,10 +12,7 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
-class MapStyleBuilder(
-    private val listFeature: List<Feature>,
-    private val resources: Resources
-) {
+class MapStyleBuilder(private val resources: Resources) {
 
     private fun getMarkerBitmap(): Bitmap =
         BitmapFactory.decodeResource(resources, R.drawable.mapbox_marker_icon_default)
@@ -28,7 +25,7 @@ class MapStyleBuilder(
                 PropertyFactory.iconIgnorePlacement(true)
             )
 
-    fun getMapStyleBuilder(): Style.Builder =
+    fun getMapStyleBuilder(listFeature: List<Feature>): Style.Builder =
         Style.Builder()
             .fromUri(Style.MAPBOX_STREETS)
             .withImage(ICON_ID, getMarkerBitmap())

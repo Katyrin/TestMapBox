@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Test MapBox</string>
+    <string name="access_token">pk.eyJ1Ijoia2F0eXJpbiIsImEiOiJja3Jocm00MjM2MjJkMm9ueGc4YW5rbTRjIn0._HAyQ4GlV7KT_Ue-rsA4Kw</string>
 
     <string name="access_to_location">Access to get location</string>
     <string name="explanation_get_location">Access is required otherwise you will not be able to use the application</string>

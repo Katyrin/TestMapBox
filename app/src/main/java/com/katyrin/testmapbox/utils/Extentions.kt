@@ -1,8 +1,7 @@
 package com.katyrin.testmapbox.utils
 
-import android.Manifest
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.animation.Animator
-import android.app.Activity
 import android.content.Context
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -15,12 +14,12 @@ import com.mapbox.android.core.permissions.PermissionsManager
 
 private const val ROTATION_ANIMATED_AMOUNT = 1000f
 private const val ROTATION_DURATION = 3000L
-const val REQUEST_CODE_LOCATION = 54
 
 fun View.setRotateImage(onAnimationEnd: () -> Unit) {
     animate()
         .rotationBy(ROTATION_ANIMATED_AMOUNT)
         .setInterpolator(DecelerateInterpolator())
+        .setDuration(ROTATION_DURATION)
         .setListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {}
             override fun onAnimationCancel(animation: Animator?) {}
@@ -29,36 +28,33 @@ fun View.setRotateImage(onAnimationEnd: () -> Unit) {
                 onAnimationEnd()
             }
         })
-        .duration = ROTATION_DURATION
 }
 
-fun Activity.requestLocationPermission() {
+fun Fragment.requestLocationPermission(): Unit =
     ActivityCompat.requestPermissions(
-        this,
-        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+        requireActivity(),
+        arrayOf(ACCESS_FINE_LOCATION),
         REQUEST_CODE_LOCATION
     )
-}
 
-fun Activity.showRationaleDialog() {
-    AlertDialog.Builder(this)
+private fun Fragment.showRationaleDialog(): Unit =
+    AlertDialog.Builder(requireContext())
         .setTitle(getString(R.string.access_to_location))
         .setMessage(getString(R.string.explanation_get_location))
         .setPositiveButton(getString(R.string.grant_access)) { _, _ -> requestLocationPermission() }
         .setNegativeButton(getString(R.string.do_not)) { dialog, _ -> dialog.dismiss() }
         .create()
         .show()
-}
 
-fun Fragment.checkLocationPermission(onPermissionGranted: () -> Unit) {
+fun Fragment.checkLocationPermission(onPermissionGranted: () -> Unit): Unit =
     when {
         PermissionsManager.areLocationPermissionsGranted(requireContext()) -> onPermissionGranted()
-        shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ->
-            requireActivity().showRationaleDialog()
-        else -> requireActivity().requestLocationPermission()
+        shouldShowRequestPermissionRationale(ACCESS_FINE_LOCATION) -> showRationaleDialog()
+        else -> requestLocationPermission()
     }
-}
 
-fun Context.toast(message: String) {
+fun Context.toast(message: String): Unit =
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-}
+
+fun Fragment.toast(message: String): Unit =
+    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()

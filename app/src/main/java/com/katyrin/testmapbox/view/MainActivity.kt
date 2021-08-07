@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.katyrin.testmapbox.R
+import com.katyrin.testmapbox.utils.RxBus
 import com.katyrin.testmapbox.databinding.ActivityMainBinding
 import com.katyrin.testmapbox.utils.REQUEST_CODE_LOCATION
 import com.katyrin.testmapbox.utils.toast
@@ -17,6 +18,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
     @Inject
     lateinit var androidInjector: DispatchingAndroidInjector<Any>
+
+    @Inject
+    lateinit var rxBus: RxBus
     private var binding: ActivityMainBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,10 +51,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     }
 
     private fun checkPermissionsResult(grants: IntArray) {
-        if (grants.isNotEmpty() && grants[0] == PackageManager.PERMISSION_GRANTED) {
-            val fragment = supportFragmentManager.fragments[0]
-            if (fragment is MapFragment) fragment.getLocation()
-        }
+        if (grants.isNotEmpty() && grants[0] == PackageManager.PERMISSION_GRANTED) rxBus.publish()
     }
 
     override fun onDestroy() {

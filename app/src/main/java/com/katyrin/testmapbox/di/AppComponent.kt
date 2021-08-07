@@ -2,6 +2,7 @@ package com.katyrin.testmapbox.di
 
 import android.content.Context
 import com.katyrin.testmapbox.App
+import com.katyrin.testmapbox.utils.RxBus
 import com.katyrin.testmapbox.di.modules.*
 import dagger.BindsInstance
 import dagger.Component
@@ -27,6 +28,9 @@ interface AppComponent : AndroidInjector<App> {
 
         @BindsInstance
         fun withContext(context: Context): Builder
+
+        @BindsInstance
+        fun withRxBus(rxBus: RxBus): Builder
 
         fun build(): AppComponent
     }

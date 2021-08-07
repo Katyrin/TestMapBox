@@ -2,6 +2,7 @@ package com.katyrin.testmapbox.di.modules
 
 import com.katyrin.testmapbox.model.api.Api
 import com.katyrin.testmapbox.model.api.MockApi
+import com.katyrin.testmapbox.model.api.GeoPointsFilter
 import com.katyrin.testmapbox.utils.BASE_URL
 import dagger.Module
 import dagger.Provides
@@ -39,5 +40,8 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideMockCurrencyApi(delegate: BehaviorDelegate<Api>): MockApi = MockApi(delegate)
+    fun provideMockCurrencyApi(
+        delegate: BehaviorDelegate<Api>,
+        geoPointsFilter: GeoPointsFilter
+    ): MockApi = MockApi(delegate, geoPointsFilter)
 }

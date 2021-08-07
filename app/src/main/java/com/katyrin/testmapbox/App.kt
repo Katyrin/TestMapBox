@@ -1,6 +1,7 @@
 package com.katyrin.testmapbox
 
 import com.katyrin.testmapbox.di.DaggerAppComponent
+import com.katyrin.testmapbox.utils.RxBus
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 
@@ -10,6 +11,7 @@ class App : DaggerApplication() {
         DaggerAppComponent
             .builder()
             .withContext(applicationContext)
+            .withRxBus(RxBus())
             .build()
 
     override fun onCreate() {
